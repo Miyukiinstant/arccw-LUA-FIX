@@ -410,8 +410,11 @@ end
 
 function SWEP:TranslateFOV(fov)
     local irons = self:GetActiveSights()
+    local arccw_dev_benchgun = false
     if GetConVar("arccw_dev_benchgun") != nil then
-    if GetConVar("arccw_dev_benchgun"):GetBool() then self.CurrentFOV = fov self.CurrentViewModelFOV = fov return fov end
+        arccw_dev_benchgun = GetConVar("arccw_dev_benchgun"):GetBool()
+        if arccw_dev_benchgun then self.CurrentFOV = fov self.CurrentViewModelFOV = fov return fov end
+    --if GetConVar("arccw_dev_benchgun"):GetBool() then self.CurrentFOV = fov self.CurrentViewModelFOV = fov return fov end
     end
     --if !irons then return end
     --if !irons.Magnification then return fov end
@@ -422,12 +425,16 @@ function SWEP:TranslateFOV(fov)
 
     local div = 1
     local app_vm = self.ViewModelFOV + self:GetOwner():GetInfoNum("arccw_vm_fov", 0) + 10
-
+    local fov_desired = 1
+    if GetConVar("fov_desired") != nil then
+        fov_desired = GetConVar("fov_desired"):GetInt()
+    end
     if self:GetState() == ArcCW.STATE_SIGHTS then
         local sgreloading = (self:GetShotgunReloading() == 2 or self:GetShotgunReloading() == 4)
         local delta = self:GetSightDelta()
         delta = math.pow(delta, 2)
-        fov = math.Clamp(( (75*(1-delta)) + (GetConVar("fov_desired"):GetInt()*delta) ), 75, 100)
+        --fov = math.Clamp(( (75*(1-delta)) + (GetConVar("fov_desired"):GetInt()*delta) ), 75, 100)
+        fov = math.Clamp(( (75*(1-delta)) + (fov_desired*delta) ), 75, 100) 
         app_vm = irons.ViewModelFOV or 45
         div = irons.Magnification * ((sgreloading or self:GetReloadingREAL() - self.ReloadInSights_CloseIn > CurTime()) and self.ReloadInSights_FOVMult or 1)
         div = math.max(div, 1)
